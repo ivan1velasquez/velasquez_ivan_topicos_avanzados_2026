@@ -11,7 +11,7 @@ CREATE USER curso_topicos IDENTIFIED BY curso2025;
 
 -- Otorgar privilegios necesarios al usuario
 GRANT CONNECT, RESOURCE, CREATE SESSION TO curso_topicos;
-GRANT CREATE TABLE, CREATE TYPE, CREATE PROCEDURE TO curso_topicos;
+GRANT CREATE TABLE, CREATE TYPE, CREATE PROCEDURE, CREATE VIEW TO curso_topicos;
 GRANT UNLIMITED TABLESPACE TO curso_topicos;
 
 -- Confirmar creación
@@ -75,9 +75,9 @@ END;
 -- Insertar datos en Pedidos
 BEGIN
     DBMS_OUTPUT.PUT_LINE('Insertando datos en Pedidos...');
-    INSERT INTO Pedidos VALUES (101, 1, 600, TO_DATE('2025-03-01', 'YYYY-MM-DD'));
-    INSERT INTO Pedidos VALUES (102, 1, 300, TO_DATE('2025-03-02', 'YYYY-MM-DD'));
-    INSERT INTO Pedidos VALUES (103, 2, 800, TO_DATE('2025-03-03', 'YYYY-MM-DD'));
+    INSERT INTO Pedidos VALUES (101, 1, 2400, TO_DATE('2025-03-01', 'YYYY-MM-DD'));
+    INSERT INTO Pedidos VALUES (102, 1, 125, TO_DATE('2025-03-02', 'YYYY-MM-DD'));
+    INSERT INTO Pedidos VALUES (103, 2, 1200, TO_DATE('2025-03-03', 'YYYY-MM-DD'));
     DBMS_OUTPUT.PUT_LINE('Datos insertados en Pedidos.');
 END;
 /
@@ -131,6 +131,41 @@ END;
 
 -- Verificar datos
 SELECT * FROM DetallesPedidos;
+
+-- Seleccionar los nombres y ciudades de todos los clientes
+SELECT Nombre, Ciudad FROM Clientes;
+
+-- Seleccionar  los productos con precio mayor a 500
+SELECT * FROM Productos WHERE Precio > 500;
+
+-- Calcular el total de ventas histórico de los pedidos
+SELECT SUM(Total) AS Gran_Total FROM Pedidos;
+
+-- Conteo de cuántos clientes hay por ciudad
+SELECT Ciudad, COUNT(*) AS Total_Clientes FROM Clientes GROUP BY Ciudad;
+
+-- Seleccionar clientes cuyo nombre empiece con 'A'
+SELECT * FROM Clientes WHERE REGEXP_LIKE(Nombre, '^A');
+
+-- Seleccionar productos que contengan la palabra 'ap'
+SELECT * FROM Productos WHERE REGEXP_LIKE(Nombre, 'ap');
+
+-- Crear vistas
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Creando vistas...');
+    -- Vista detallada de los pedidos con el nombre del cliente
+    EXECUTE IMMEDIATE 'CREATE OR REPLACE VIEW Vista_Pedidos_Clientes_Nombres AS
+    SELECT pe.PedidoID, c.Nombre AS Nombre_Cliente, c.Ciudad, pr.Nombre AS Nombre_Producto, pe.Total, pe.FechaPedido
+    FROM Clientes c
+    JOIN Pedidos pe ON c.ClienteID = pe.ClienteID
+    JOIN DetallesPedidos dp ON pe.PedidoID = dp.PedidoID
+    JOIN Productos pr ON dp.ProductoID = pr.ProductoID';
+    -- Vista de productos que cuesten menos de 1000
+    EXECUTE IMMEDIATE 'CREATE OR REPLACE VIEW Vista_Productos_Menor_1000 AS
+    SELECT * FROM Productos WHERE Precio < 1000';
+    DBMS_OUTPUT.PUT_LINE('Vistas creadas exitosamente.');
+END;
+/
 
 -- Commit final
 COMMIT;
